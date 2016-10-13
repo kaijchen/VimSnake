@@ -209,7 +209,7 @@ void tock()
 	refresh();
 }
 
-void tick(int sig)
+void timer()
 {
 	struct itimerval gaptime;
 
@@ -220,7 +220,10 @@ void tick(int sig)
 	gaptime.it_value.tv_usec = MILLISEC * 1000;
 
 	setitimer(ITIMER_REAL, &gaptime, NULL);
+}
 
+void tick(int sig)
+{
 	tock();
 }
 
@@ -237,11 +240,9 @@ int main()
 {
 	signal(SIGALRM, tick);
 	init();
-	alarm(1);
 	reset();
+	timer();
 	run();
-	for (;;)
-		;
 	exit(0);
 }
 
