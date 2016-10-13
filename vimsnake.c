@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <setjmp.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -15,7 +16,7 @@
 #define GHINT "use 'hjkl' to move, 'q' to quit"
 #define OVER "Game Over"
 #define OHINT "press 'r' to restart, 'q' to quit"
-#define MILLISEC 150
+#define MILLISEC 100
 
 #define BLANK ' '
 #define SNAKE '@'
@@ -42,10 +43,24 @@ struct snake {
 	struct point p[MAXLEN];
 };
 
+jmp_buf env;
 struct snake sn;
 struct point food;
 int heading;
-int lock;
+int newheading;
+
+void timer(unsigned int sec, unsigned int usec)
+{
+	struct itimerval gaptime;
+
+	gaptime.it_interval.tv_sec = sec;
+	gaptime.it_interval.tv_usec = usec;
+
+	gaptime.it_value.tv_sec = sec;
+	gaptime.it_value.tv_usec = usec;
+
+	setitimer(ITIMER_REAL, &gaptime, NULL);
+}
 
 void genfood()
 {
@@ -58,11 +73,11 @@ void genfood()
 
 void reset()
 {
-	lock = 0;
 	sn.head = 0;
 	sn.tail = 0;
 	sn.p[0] = (struct point){HEIGHT / 2, WIDTH / 2};
 	heading = IDLE;
+	newheading = IDLE;
 	for (int i = 0; i <= HEIGHT; i++) {
 		mvaddch(i, 0, WALL);
 		mvaddch(i, WIDTH, WALL);
@@ -77,6 +92,7 @@ void reset()
 	genfood();
 	mvaddch(sn.p[0].x, sn.p[0].y, SNAKE);
 	refresh();
+	timer(0, MILLISEC * 1000);
 }
 
 void init()
@@ -110,6 +126,7 @@ void gameover()
 {
 	int c;
 
+	timer(0, 0);
 	mvaddstr(HEIGHT / 2, (WIDTH - sizeof(OVER) + 1) / 2, OVER);
 	mvaddstr(HEIGHT / 2 + 1, (WIDTH - sizeof(OHINT) + 1) / 2, OHINT);
 	refresh();
@@ -117,7 +134,7 @@ void gameover()
 		if (c == 'q')
 			quit(0);
 		if (c == 'r')
-			quit(1);
+			longjmp(env, 1);
 	}
 }
 
@@ -125,6 +142,7 @@ struct point forward(struct point orig)
 {
 	struct point next;
 
+	heading = newheading;
 	switch(heading) {
 	case LEFT:
 		next.x = orig.x;
@@ -145,36 +163,33 @@ struct point forward(struct point orig)
 	default:
 		return orig;
 	}
-	lock = 0;
 	return next;
 }
 
 void control(int c)
 {
-	int oldh = heading;
-
-	if (lock)
-		return;
 	switch (c) {
 	case 'h':
-		heading = heading == RIGHT ? RIGHT : LEFT;
+		if (heading != RIGHT)
+			newheading = LEFT;
 		break;
 	case 'j':
-		heading = heading == UP ? UP : DOWN;
+		if (heading != UP)
+			newheading = DOWN;
 		break;
 	case 'k':
-		heading = heading == DOWN ? DOWN : UP;
+		if (heading != DOWN)
+			newheading = UP;
 		break;
 	case 'l':
-		heading = heading == LEFT ? LEFT : RIGHT;
+		if (heading != LEFT)
+			newheading = RIGHT;
 		break;
 	case 'q':
 		quit(0);
 	default:
 		return;
 	}
-	if (oldh != heading)
-		lock = 1;
 }
 
 int check(struct point p)
@@ -209,18 +224,6 @@ void tock()
 	refresh();
 }
 
-void timer()
-{
-	struct itimerval gaptime;
-
-	gaptime.it_interval.tv_sec = 0;
-	gaptime.it_interval.tv_usec = MILLISEC * 1000;
-
-	gaptime.it_value.tv_sec = 0;
-	gaptime.it_value.tv_usec = MILLISEC * 1000;
-
-	setitimer(ITIMER_REAL, &gaptime, NULL);
-}
 
 void tick(int sig)
 {
@@ -240,9 +243,9 @@ int main()
 {
 	signal(SIGALRM, tick);
 	init();
+	setjmp(env);
 	reset();
-	timer();
 	run();
-	exit(0);
+	quit(0);
 }
 
