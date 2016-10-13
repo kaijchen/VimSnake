@@ -1,7 +1,7 @@
 #include <curses.h>
-#include <setjmp.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
@@ -15,6 +15,7 @@
 #define GHINT "use 'hjkl' to move, 'q' to quit"
 #define OVER "Game Over"
 #define OHINT "press 'r' to restart, 'q' to quit"
+#define MILLISEC 150
 
 #define BLANK ' '
 #define SNAKE '@'
@@ -44,7 +45,7 @@ struct snake {
 struct snake sn;
 struct point food;
 int heading;
-jmp_buf env;
+int lock;
 
 void genfood()
 {
@@ -57,6 +58,7 @@ void genfood()
 
 void reset()
 {
+	lock = 0;
 	sn.head = 0;
 	sn.tail = 0;
 	sn.p[0] = (struct point){HEIGHT / 2, WIDTH / 2};
@@ -95,6 +97,7 @@ void init()
 	mvaddstr(HEIGHT / 2, (WIDTH - sizeof(GREET) + 1) / 2, GREET);
 	mvaddstr(HEIGHT / 2 + 1, (WIDTH - sizeof(GHINT) + 1) / 2, GHINT);
 	refresh();
+	sleep(2);
 }
 
 void quit(int code)
@@ -114,7 +117,7 @@ void gameover()
 		if (c == 'q')
 			quit(0);
 		if (c == 'r')
-			longjmp(env, 0);
+			quit(1);
 	}
 }
 
@@ -142,11 +145,16 @@ struct point forward(struct point orig)
 	default:
 		return orig;
 	}
+	lock = 0;
 	return next;
 }
 
 void control(int c)
 {
+	int oldh = heading;
+
+	if (lock)
+		return;
 	switch (c) {
 	case 'h':
 		heading = heading == RIGHT ? RIGHT : LEFT;
@@ -165,6 +173,8 @@ void control(int c)
 	default:
 		return;
 	}
+	if (oldh != heading)
+		lock = 1;
 }
 
 int check(struct point p)
@@ -201,14 +211,13 @@ void tock()
 
 void tick(int sig)
 {
-	signal(SIGALRM, tick);
 	struct itimerval gaptime;
 
 	gaptime.it_interval.tv_sec = 0;
-	gaptime.it_interval.tv_usec = 200000;
+	gaptime.it_interval.tv_usec = MILLISEC * 1000;
 
 	gaptime.it_value.tv_sec = 0;
-	gaptime.it_value.tv_usec = 200000;
+	gaptime.it_value.tv_usec = MILLISEC * 1000;
 
 	setitimer(ITIMER_REAL, &gaptime, NULL);
 
@@ -228,11 +237,11 @@ int main()
 {
 	signal(SIGALRM, tick);
 	init();
-	sleep(2);
-	setjmp(env);
-	reset();
 	alarm(1);
+	reset();
 	run();
+	for (;;)
+		;
 	exit(0);
 }
 
