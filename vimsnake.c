@@ -49,15 +49,15 @@ struct point food;
 int heading;
 int newheading;
 
-void timer(unsigned int sec, unsigned int usec)
+void timer()
 {
 	struct itimerval gaptime;
 
-	gaptime.it_interval.tv_sec = sec;
-	gaptime.it_interval.tv_usec = usec;
+	gaptime.it_interval.tv_sec = 0;
+	gaptime.it_interval.tv_usec = MILLISEC * 1000;
 
-	gaptime.it_value.tv_sec = sec;
-	gaptime.it_value.tv_usec = usec;
+	gaptime.it_value.tv_sec = 0;
+	gaptime.it_value.tv_usec = MILLISEC * 1000;
 
 	setitimer(ITIMER_REAL, &gaptime, NULL);
 }
@@ -92,7 +92,6 @@ void reset()
 	genfood();
 	mvaddch(sn.p[0].x, sn.p[0].y, SNAKE);
 	refresh();
-	timer(0, MILLISEC * 1000);
 }
 
 void init()
@@ -114,6 +113,7 @@ void init()
 	mvaddstr(HEIGHT / 2 + 1, (WIDTH - sizeof(GHINT) + 1) / 2, GHINT);
 	refresh();
 	sleep(2);
+	timer();
 }
 
 void quit(int code)
@@ -126,7 +126,6 @@ void gameover()
 {
 	int c;
 
-	timer(0, 0);
 	mvaddstr(HEIGHT / 2, (WIDTH - sizeof(OVER) + 1) / 2, OVER);
 	mvaddstr(HEIGHT / 2 + 1, (WIDTH - sizeof(OHINT) + 1) / 2, OHINT);
 	refresh();
@@ -241,10 +240,16 @@ void run()
 
 int main()
 {
+	sigset_t mask;
+
 	signal(SIGALRM, tick);
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGALRM);
+	sigprocmask(SIG_BLOCK, &mask, NULL);
 	init();
 	setjmp(env);
 	reset();
+	sigprocmask(SIG_UNBLOCK, &mask, NULL);
 	run();
 	quit(0);
 }
