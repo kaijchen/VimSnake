@@ -7,7 +7,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#define DELAY 1
 #define WIDTH 80
 #define HEIGHT 25
 #define MAXLEN ((WIDTH - 2) * (HEIGHT - 2) + 1)
