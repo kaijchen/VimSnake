@@ -66,7 +66,7 @@ void genfood()
 	do {
 		food.x = rand() % (HEIGHT - 2) + 1;
 		food.y = rand() % (WIDTH - 2) + 1;
-	} while (mvinch(food.x, food.y) == SNAKE);
+	} while (mvinch(food.x, food.y) != BLANK);
 	mvaddch(food.x, food.y, FOOD);
 }
 
@@ -209,8 +209,10 @@ void tock()
 	sn.head = (sn.head + 1) % MAXLEN;
 	mvaddch(sn.p[sn.tail].x, sn.p[sn.tail].y, BLANK);
 	if ((rv = check(sn.p[sn.head])) != 1) {
+		mvaddch(sn.p[sn.head].x, sn.p[sn.head].y, SNAKE);
 		sn.tail = (sn.tail + 1) % MAXLEN;
 	} else {
+		mvaddch(sn.p[sn.head].x, sn.p[sn.head].y, SNAKE);
 		mvaddch(sn.p[sn.tail].x, sn.p[sn.tail].y, SNAKE);
 		genfood();
 	}
@@ -218,7 +220,6 @@ void tock()
 		mvaddch(sn.p[sn.head].x, sn.p[sn.head].y, BOOM);
 		gameover();
 	}
-	mvaddch(sn.p[sn.head].x, sn.p[sn.head].y, SNAKE);
 	refresh();
 }
 
