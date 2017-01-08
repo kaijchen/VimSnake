@@ -15,7 +15,8 @@
 #define GHINT "use 'hjkl' to move, 'q' to quit"
 #define OVER "Game Over"
 #define OHINT "press 'r' to restart, 'q' to quit"
-#define MILLISEC 100
+
+static double tick_msec = 100.0;
 
 #define BLANK ' '
 #define SNAKE '@'
@@ -45,18 +46,18 @@ struct snake {
 jmp_buf env;
 struct snake sn;
 struct point food;
-int heading;
-int newheading;
+static int heading;
+static int newheading;
 
 void timer()
 {
 	struct itimerval gaptime;
 
 	gaptime.it_interval.tv_sec = 0;
-	gaptime.it_interval.tv_usec = MILLISEC * 1000;
+	gaptime.it_interval.tv_usec = tick_msec * 1000;
 
 	gaptime.it_value.tv_sec = 0;
-	gaptime.it_value.tv_usec = MILLISEC * 1000;
+	gaptime.it_value.tv_usec = tick_msec * 1000;
 
 	setitimer(ITIMER_REAL, &gaptime, NULL);
 }
@@ -238,9 +239,13 @@ void run()
 	}
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 	sigset_t mask;
+
+        if (argc == 2) {
+                tick_msec = atof(argv[1]);
+        }
 
 	signal(SIGALRM, tick);
 	sigemptyset(&mask);

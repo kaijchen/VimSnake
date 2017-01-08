@@ -8,7 +8,7 @@
 
 ## Run
 
-    ./vimsnake
+    ./vimsnake [milisecond]
 
 ## Control
 
