@@ -243,9 +243,9 @@ int main(int argc, char *argv[])
 {
 	sigset_t mask;
 
-        if (argc == 2) {
-                tick_msec = atof(argv[1]);
-        }
+	if (argc == 2) {
+		tick_msec = atof(argv[1]);
+	}
 
 	signal(SIGALRM, tick);
 	sigemptyset(&mask);
