@@ -78,16 +78,16 @@ void reset()
 	sn.p[0] = (struct point){HEIGHT / 2, WIDTH / 2};
 	heading = IDLE;
 	newheading = IDLE;
-	for (int i = 0; i <= HEIGHT; i++) {
+	for (int i = 0; i < HEIGHT; i++) {
 		mvaddch(i, 0, WALL);
-		mvaddch(i, WIDTH, WALL);
+		mvaddch(i, WIDTH - 1, WALL);
 	}
-	for (int j = 0; j <= WIDTH; j++) {
+	for (int j = 0; j < WIDTH; j++) {
 		mvaddch(0, j, WALL);
-		mvaddch(HEIGHT, j, WALL);
+		mvaddch(HEIGHT - 1, j, WALL);
 	}
-	for (int i = 1; i < HEIGHT; i++)
-		for (int j = 1; j < WIDTH; j++)
+	for (int i = 1; i < HEIGHT - 1; i++)
+		for (int j = 1; j < WIDTH - 1; j++)
 			mvaddch(i, j, BLANK);
 	genfood();
 	mvaddch(sn.p[0].x, sn.p[0].y, SNAKE);
@@ -103,11 +103,11 @@ void init()
 	curs_set(0);
 	for (int i = 0; i < HEIGHT; i++) {
 		mvaddch(i, 0, WALL);
-		mvaddch(i, WIDTH, WALL);
+		mvaddch(i, WIDTH - 1, WALL);
 	}
 	for (int j = 0; j < WIDTH; j++) {
 		mvaddch(0, j, WALL);
-		mvaddch(HEIGHT, j, WALL);
+		mvaddch(HEIGHT - 1, j, WALL);
 	}
 	mvaddstr(HEIGHT / 2, (WIDTH - sizeof(GREET) + 1) / 2, GREET);
 	mvaddstr(HEIGHT / 2 + 1, (WIDTH - sizeof(GHINT) + 1) / 2, GHINT);
