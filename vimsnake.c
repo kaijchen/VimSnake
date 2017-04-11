@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 #define WIDTH 80
-#define HEIGHT 25
+#define HEIGHT 24
 #define MAXLEN ((WIDTH - 2) * (HEIGHT - 2) + 1)
 
 #define GREET "VimSnake, by ckj, 2016"
