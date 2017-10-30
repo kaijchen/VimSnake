@@ -12,10 +12,18 @@ static int WIDTH;
 static int HEIGHT;
 static int MAXLEN;
 
-#define GREET "VimSnake, by ckj, 2016"
-#define GHINT "use 'hjkl' to move, 'q' to quit"
+#define MIN_WIDTH  4
+#define MIN_HEIGHT 4
+
+#define showinfo(line, str) \
+	mvaddstr((line), (width - sizeof(str) + 1) / 2, str)
+
+#define TITLE "VimSnake"
+#define AUTHOR "by ckj, 2016"
+#define HELP0 "'hjkl' to move"
+#define HELP1 "'r' to restart"
+#define HELP2 "'q' to quit"
 #define OVER "Game Over"
-#define OHINT "press 'r' to restart, 'q' to quit"
 
 static double tick_msec = 100.0;
 
@@ -72,18 +80,23 @@ void genfood()
 	mvaddch(food.x, food.y, FOOD);
 }
 
-void reset()
+void setboardsize()
 {
 	struct winsize size;
 	ioctl( 0, TIOCGWINSZ, (char *) &size );
 
-	if (( (HEIGHT = size.ws_row) < 4 ) || ( (WIDTH = size.ws_col) < 4 )) {
-		printf("window too small");
+	if (( (HEIGHT = size.ws_row) < MIN_HEIGHT ) ||
+	    ( (WIDTH = size.ws_col) < MIN_WIDTH )) {
+		fprintf(stderr, "window too small\n");
 		exit(EXIT_FAILURE);
 	}
 	MAXLEN = (HEIGHT - 2) * (WIDTH - 2) + 1;
 	sn.p = realloc(sn.p, sizeof(struct point) * MAXLEN);
+}
 
+void reset()
+{
+	setboardsize();
 	sn.head = 0;
 	sn.tail = 0;
 	sn.p[0] = (struct point){HEIGHT / 2, WIDTH / 2};
@@ -107,15 +120,8 @@ void reset()
 
 void init()
 {
-	struct winsize size;
-	ioctl( 0, TIOCGWINSZ, (char *) &size );
-
-	if (( (HEIGHT = size.ws_row) < 4 ) || ( (WIDTH = size.ws_col) < 4 )) {
-		printf("window too small");
-		exit(EXIT_FAILURE);
-	}
-	MAXLEN = (HEIGHT - 2) * (WIDTH - 2) + 1;
-	sn.p = malloc(sizeof(struct point) * MAXLEN);
+	sn.p = NULL;
+	setboardsize();
 
 	srand(time(0));
 	initscr();
@@ -130,8 +136,10 @@ void init()
 		mvaddch(0, j, WALL);
 		mvaddch(HEIGHT - 1, j, WALL);
 	}
-	mvaddstr(HEIGHT / 2, (WIDTH - sizeof(GREET) + 1) / 2, GREET);
-	mvaddstr(HEIGHT / 2 + 1, (WIDTH - sizeof(GHINT) + 1) / 2, GHINT);
+	showinfo(HEIGHT / 2 - 2, TITLE);
+	showinfo(HEIGHT / 2 - 1, AUTHOR);
+	showinfo(HEIGHT / 2 + 1, HELP0);
+	showinfo(HEIGHT / 2 + 2, HELP2);
 	refresh();
 	sleep(2);
 	timer();
@@ -148,8 +156,9 @@ void gameover()
 {
 	int c;
 
-	mvaddstr(HEIGHT / 2, (WIDTH - sizeof(OVER) + 1) / 2, OVER);
-	mvaddstr(HEIGHT / 2 + 1, (WIDTH - sizeof(OHINT) + 1) / 2, OHINT);
+	showinfo(HEIGHT / 2 - 1, OVER);
+	showinfo(HEIGHT / 2 + 1, HELP1);
+	showinfo(HEIGHT / 2 + 2, HELP2);
 	refresh();
 	while ((c = getch())) {
 		if (c == 'q')
