@@ -26,11 +26,11 @@ static double tick_msec = 100.0;
 #define BOOM '!'
 
 enum {
-	IDLE	= 0,
-	UP	= 1,
-	DOWN	= 2,
-	LEFT	= 3,
-	RIGHT	= 4,
+	IDLE,
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT,
 };
 
 struct point {
@@ -74,6 +74,16 @@ void genfood()
 
 void reset()
 {
+	struct winsize size;
+	ioctl( 0, TIOCGWINSZ, (char *) &size );
+
+	if (( (HEIGHT = size.ws_row) < 4 ) || ( (WIDTH = size.ws_col) < 4 )) {
+		printf("window too small");
+		exit(EXIT_FAILURE);
+	}
+	MAXLEN = (HEIGHT - 2) * (WIDTH - 2) + 1;
+	sn.p = realloc(sn.p, sizeof(struct point) * MAXLEN);
+
 	sn.head = 0;
 	sn.tail = 0;
 	sn.p[0] = (struct point){HEIGHT / 2, WIDTH / 2};
@@ -198,6 +208,8 @@ void control(int c)
 		break;
 	case 'q':
 		quit(0);
+	case 'r':
+		longjmp(env, 1);
 	default:
 		return;
 	}

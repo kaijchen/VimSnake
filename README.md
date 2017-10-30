@@ -12,8 +12,12 @@
 
 ## Control
 
-    'hjkl' for LEFT DOWN UP RIGHT
-    'q' to quit
+    'h': LEFT
+    'j': DOWN
+    'k': UP
+    'l': RIGHT
+    'q': QUIT
+    'r': RESTART
 
 ## Depend on
 
@@ -22,6 +26,5 @@
 ## TODO
 
 1. fix genfood(): infinate loop when screen is full (i.e. you win)
-2. Automatic window size for each restart
-3. AutoSnake
+2. AutoSnake
 
