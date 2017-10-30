@@ -6,10 +6,11 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 
-#define WIDTH 80
-#define HEIGHT 24
-#define MAXLEN ((WIDTH - 2) * (HEIGHT - 2) + 1)
+static int WIDTH;
+static int HEIGHT;
+static int MAXLEN;
 
 #define GREET "VimSnake, by ckj, 2016"
 #define GHINT "use 'hjkl' to move, 'q' to quit"
@@ -40,7 +41,7 @@ struct point {
 struct snake {
 	int head;
 	int tail;
-	struct point p[MAXLEN];
+	struct point *p;
 };
 
 jmp_buf env;
@@ -96,6 +97,16 @@ void reset()
 
 void init()
 {
+	struct winsize size;
+	ioctl( 0, TIOCGWINSZ, (char *) &size );
+
+	if (( (HEIGHT = size.ws_row) < 4 ) || ( (WIDTH = size.ws_col) < 4 )) {
+		printf("window too small");
+		exit(EXIT_FAILURE);
+	}
+	MAXLEN = (HEIGHT - 2) * (WIDTH - 2) + 1;
+	sn.p = malloc(sizeof(struct point) * MAXLEN);
+
 	srand(time(0));
 	initscr();
 	cbreak();
@@ -119,6 +130,7 @@ void init()
 void quit(int code)
 {
 	endwin();
+	free(sn.p);
 	exit(code);
 }
 
@@ -258,4 +270,3 @@ int main(int argc, char *argv[])
 	run();
 	quit(0);
 }
-

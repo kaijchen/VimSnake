@@ -22,6 +22,6 @@
 ## TODO
 
 1. fix genfood(): infinate loop when screen is full (i.e. you win)
-2. Automatic window size instead of fixed 80x24
+2. Automatic window size for each restart
 3. AutoSnake
 
