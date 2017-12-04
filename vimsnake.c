@@ -16,7 +16,7 @@ static int MAXLEN;
 #define MIN_HEIGHT 4
 
 #define showinfo(line, str) \
-	mvaddstr((line), (width - sizeof(str) + 1) / 2, str)
+	mvaddstr((line), (WIDTH - sizeof(str) + 1) / 2, str)
 
 #define TITLE "VimSnake"
 #define AUTHOR "by ckj, 2016"
